@@ -1,0 +1,28 @@
+// this is protobuff for Request and Response
+syntax = "proto3";
+
+package FileSystem;
+
+option go_package = "./mp";
+
+service FileSystem{
+    rpc GrepReq (Request) returns (Response){}
+    rpc FailDetect (Ping) returns (Pong) {}
+}
+
+
+message Request{
+    string req = 1;
+}
+
+message Response{
+    string res = 1;
+}
+
+message Ping{
+    repeated string ping = 1;
+}
+
+message Pong{
+    repeated string pong = 1;
+}
