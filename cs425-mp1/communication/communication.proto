@@ -1,0 +1,20 @@
+// this is protobuff for Request and Response
+syntax = "proto3";
+
+package communication;
+
+option go_package = "./cs425-mp1";
+
+service FileSystem{
+    rpc GrepReq (Request) returns (Response){}
+}
+
+
+message Request{
+    string req = 1;
+}
+
+message Response{
+    string res = 1;
+}
+

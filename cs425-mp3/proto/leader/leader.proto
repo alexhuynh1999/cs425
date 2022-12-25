@@ -1,0 +1,53 @@
+// this is protobuff for Request and Response
+syntax = "proto3";
+
+package leader;
+
+option go_package = "cs425/mp/leader";
+
+service Leader{
+    rpc Join (stream hb) returns (stream memberList){}
+    rpc ShowFileInDataNode (nodeAddress) returns (localFileNames){}
+    rpc JoinStandby (stream standbyHb) returns (stream networkMembers){}
+    rpc query (generalMessage) returns (generalMessage){}
+    // rpc query (query) returns (file){}
+}
+
+// heartbeat messages
+message hb {
+    bool heartbeat = 1;
+    string ip = 2;
+    int32 membershipListVersion = 3; // actually leadershiplistversion
+}
+
+message memberList {
+    repeated string members = 1;
+    int32 version = 2;
+}
+
+
+message nodeAddress{
+    string address = 1;
+}
+
+message localFileNames{
+    repeated string localFileNames = 1;
+}
+
+message standbyHb {
+    bool heartbeat = 1;
+    string ip = 2;
+    int32 membershipListVersion = 3;
+    int32 leaderListVersion = 4;
+}
+
+message networkMembers {
+    repeated string members = 1;
+    int32 membershipListVersion = 2;
+    repeated string leaders = 3;
+    int32 leaderListVersion = 4;
+}
+
+message generalMessage{
+    string message = 1;
+}

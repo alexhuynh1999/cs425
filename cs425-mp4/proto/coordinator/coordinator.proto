@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+package coordinator;
+
+option go_package = "cs425-mp4/coordinator";
+
+service Coordinator {
+    // Client-facing services
+    /// Previous MP services
+    rpc ListFiles (File) returns (FileLocations) {} // *Do not pass `bytes file` parameter as input
+    rpc Store (Heartbeat) returns (FileList) {} // Piggybacking off heartbeat message so we can access IP
+    rpc GetMembers (Empty) returns (MemberList) {}
+    /// Services that route to worker nodes
+    rpc Put (File) returns (Ack) {}
+    rpc Get (File) returns (File) {} // *
+    rpc GetVersion (FileVersions) returns (File) {}
+    rpc Delete (File) returns (Ack) {} // *
+    //// MP4 Services
+    rpc Train (Hyperparameters) returns (Ack) {}
+    rpc Inference (stream Query) returns (stream QueryResults) {}
+    rpc GetRate (Model) returns (C1) {}
+    rpc Stats (Model) returns (C2) {}
+    rpc SetBatchSize (Model) returns (Ack) {}
+    rpc ShowJobs (Empty) returns (C4) {}
+    rpc GetResults (Empty) returns (Results) {}
+    ///// Active -> Standby
+    rpc CreateModel (ModelInfo) returns (Ack) {}
+    rpc UpdateModel (ModelStats) returns (Ack) {}
+    rpc UpdateJobStatus (Status) returns (Ack) {}
+
+    // Internal coordination services
+    rpc Join (stream Heartbeat) returns (Ack) {} // technically also client-facing
+    rpc UpdateNetworkInfo (NetworkInfo) returns (Ack) {} // Active coordinator uses this to send network info the standby
+    rpc DeleteNetworkInfo (DeleteNetwork) returns (Ack) {} // probably don't need to pass []vals
+}
+
+message Hyperparameters {
+    // Modify this to be individual strings of specific parameters
+    // Decided when model is decided
+    int32 batch_size = 1;
+}
+
+message Ack {
+    bool done = 1;
+}
+
+message Query {
+    // Not sure what exactly we're querying
+    int32 num_queries = 1;
+    string ip = 2;
+}
+
+message QueryResults {
+    // Not sure what the results should be - is this a classification problem?
+    bytes results = 1;
+}
+
+message Heartbeat {
+    string ip = 1;
+    int32 memberListVersion = 2;
+    int32 fileListVersion = 3;
+}
+
+message List {
+    repeated string vals = 1;
+}
+
+message NetworkInfo {
+    string type = 1; // filelist or memberlist
+    /*
+    string key = 2; // file_name if filelist, ip if memberlist
+    repeated string vals = 3; // [](addresses) if filelist, [](file_names) if member_list
+    */
+    repeated string keys = 2;
+    repeated List lsts = 3;
+    int32 version = 4;
+}
+
+message Empty {
+}
+
+message MemberList {
+    repeated string ips = 1;
+    repeated string vms = 2;
+}
+
+message File {
+    string file_name = 1;
+    bytes file = 2;
+}
+
+message FileLocations {
+    repeated string ips = 1;
+    repeated string vms = 2;
+}
+
+message FileList {
+    repeated string files = 1;
+}
+
+message FileVersions {
+    string file_name = 1;
+    int32 versions = 2;
+    bytes file = 3;
+}
+
+message DeleteNetwork {
+    string type = 1;
+    string address = 2;
+    string file_name = 3;
+}
+
+message Model {
+    int32 model_id = 1;
+    int32 batch_size = 2;
+}
+
+message C1 {
+    float rate = 1;
+    int32 processed = 2;
+}
+
+message C2 {
+    float mean = 1;
+    float std = 2;
+    float median = 3;
+    repeated float percentiles = 4;
+}
+
+message Jobs {
+    repeated int32 job_ids = 1;
+}
+
+message C4 {
+    repeated string ips = 1; // ["Address:Model"]
+    repeated Jobs jobs = 2; // []
+}
+
+message ModelInfo {
+    int32 id = 1;
+    int32 batch_size = 2;
+}
+
+message ModelStats {
+    int32 model_id = 1;
+    int32 num_jobs = 2;
+    repeated float time = 3; 
+    string update_type = 4;
+}
+
+message Status {
+    bool working = 1;
+    int32 num_queries = 2;
+    string client = 3;
+}
+
+message Results {
+    string result = 1;
+}

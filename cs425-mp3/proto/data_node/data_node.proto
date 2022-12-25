@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package data;
+
+option go_package = "cs425/mp/data";
+
+service Data {
+    rpc Promote (NetworkMembers) returns (Ack){}
+    rpc GetActiveLeader (Empty) returns (Leader){}
+    rpc UpdateActiveLeader (Leader) returns (Ack){}
+    rpc Read (ReadName) returns (FileContent){}
+    rpc Write (WriteFile) returns (Ack){}
+    rpc Delete (DeleteFile) returns (Ack) {}
+    //rpc store (file) returns (ack){}
+}
+
+message WriteFile {
+    string fileName = 1;
+    string fileContent = 2;
+}
+
+message ReadName{
+    string fileName = 1;
+}
+
+message FileContent{
+    string fileContent = 1;
+}
+
+
+message DeleteFile{
+    string fileName = 1;
+}
+
+message NetworkMembers {
+    repeated string members = 1;
+    int32 memberVersion = 2;
+    repeated string leaders = 3;
+    int32 leaderVersion = 4;
+}
+
+message Ack {
+    bool done = 1;
+}
+
+message Empty {}
+
+message Leader {
+    string leader = 1;
+}
